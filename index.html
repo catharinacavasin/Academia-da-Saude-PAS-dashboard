@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Academia da Saúde Program (PAS) - Climate Resilience Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <style>
+    :root {
+      --bg: #f7f7f7;
+      --card: #ffffff;
+      --primary: #346ead;
+      --primary-light: #5a8fc2;
+      --primary-dark: #255a8f;
+      --accent: #d7b236;
+      --navy: #1a2f4e;
+      --text: #000000;
+      --text-muted: #949494;
+      --border: #cccccc;
+      --border-light: #e8e8e8;
+      --shadow: 0 1px 3px rgba(0,0,0,0.10);
+      --shadow-md: 0 3px 10px rgba(0,0,0,0.14);
+      --radius: 4px;
+      --gap: 20px;
+      --table-stripe: #f9f9f9;
+      --table-hover: #e8f1f8;
+      --toolbar-bg: #f7f7f7;
+      --input-bg: #ffffff;
+      --chart-grid: #D7D7D7;
+    }
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --primary: #5a8fc2;
+      --primary-light: #7aadd6;
+      --primary-dark: #346ead;
+      --accent: #e0c060;
+      --navy: #c8d8ea;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --border-light: #283548;
+      --shadow: 0 1px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+      --shadow-md: 0 4px 14px rgba(0,0,0,0.4);
+      --table-stripe: #1a2740;
+      --table-hover: #1e3a5f;
+      --toolbar-bg: #1a2740;
+      --input-bg: #0f172a;
+      --chart-grid: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Libre Franklin', 'franklin-gothic-urw', Verdana, Geneva, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    /* ── Header ───────────────────────────────────────────────────────────── */
+    .header {
+      background: #ffffff;
+      color: var(--navy);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    [data-theme="dark"] .header {
+      background: #1a2f4e;
+      border-bottom-color: #334155;
+    }
+    .header-left h1 {
+      font-size: 24px; font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.3px;
+      line-height: 1.2;
+    }
+    [data-theme="dark"] .header-left h1 { color: #e2e8f0; }
+    .header-left p {
+      font-size: 14px; color: var(--text-muted);
+      margin-top: 4px; font-weight: 400;
+    }
+    [data-theme="dark"] .header-left p { color: #94a3b8; }
+    .header-right   { text-align: right; flex-shrink: 0; }
+    .header-meta    { font-size: 13px; color: var(--text-muted); line-height: 1.9; }
+    [data-theme="dark"] .header-meta { color: #94a3b8; }
+    .header-meta a  { color: var(--primary); font-weight: 600; text-decoration: none; }
+    .header-meta a:hover { text-decoration: underline; }
+    .header-pills   { display: flex; gap: 6px; margin-top: 10px; justify-content: flex-end; flex-wrap: wrap; }
+    .pill {
+      background: #f0f0f0;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 4px 12px;
+      font-size: 13px; font-weight: 600;
+      color: var(--navy);
+      letter-spacing: 0.2px;
+    }
+    [data-theme="dark"] .pill {
+      background: #283548;
+      border-color: #334155;
+      color: #c8d8ea;
+    }
+
+    /* ── Dark-mode toggle ─────────────────────────────────────────────────── */
+    .theme-toggle {
+      background: #f0f0f0;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 5px 12px;
+      font-size: 13px;
+      color: var(--navy);
+      cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      font-family: inherit; font-weight: 600;
+      transition: background 0.15s;
+    }
+    .theme-toggle:hover { background: #e0e0e0; }
+    [data-theme="dark"] .theme-toggle {
+      background: #283548; border-color: #334155; color: #c8d8ea;
+    }
+    [data-theme="dark"] .theme-toggle:hover { background: #334155; }
+
+    /* ── Dark-mode overrides ──────────────────────────────────────────────── */
+    [data-theme="dark"] #loading { background: rgba(15,23,42,0.97); }
+    [data-theme="dark"] #loading p { color: var(--text-muted); }
+    [data-theme="dark"] .spinner { border-color: #334155; border-top-color: var(--primary); }
+    [data-theme="dark"] .filter-group select { background-color: var(--input-bg); color: var(--text); border-color: var(--border); }
+    [data-theme="dark"] .filter-group select:focus { background: var(--card); }
+    [data-theme="dark"] thead th { background: var(--toolbar-bg); color: var(--text-muted); }
+    [data-theme="dark"] thead th:hover { background: var(--card); color: var(--text); }
+    [data-theme="dark"] tbody tr:nth-child(even) { background: var(--table-stripe); }
+    [data-theme="dark"] tbody tr:hover { background: var(--table-hover) !important; }
+    [data-theme="dark"] .table-toolbar { background: var(--toolbar-bg); }
+    [data-theme="dark"] .search-box { background-color: var(--input-bg); color: var(--text); border-color: var(--border); }
+    [data-theme="dark"] .pagination { background: var(--toolbar-bg); }
+    [data-theme="dark"] .pg-btn { background: var(--card); color: var(--text); border-color: var(--border); }
+    [data-theme="dark"] .pg-btn:hover:not(:disabled) { background: var(--input-bg); }
+    [data-theme="dark"] .map-footer { background: var(--toolbar-bg); color: var(--text-muted); }
+    [data-theme="dark"] .cri-legend { background: rgba(30,41,59,0.93); color: var(--text); }
+    [data-theme="dark"] #error-msg { background: #450a0a; border-color: #991b1b; color: #fca5a5; }
+    [data-theme="dark"] #error-msg code { background: #7f1d1d; }
+
+    /* ── Active filter indicator ───────────────────────────────────────────── */
+    .filter-active select {
+      border-color: var(--primary) !important;
+      background-color: #e8f1f8 !important;
+    }
+    [data-theme="dark"] .filter-active select {
+      background-color: #1e3a5f !important;
+    }
+    .btn-reset-count {
+      background: rgba(255,255,255,0.25); color: white;
+      border-radius: 50%; width: 18px; height: 18px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700;
+      margin-left: 4px;
+    }
+
+    /* ── Loading ──────────────────────────────────────────────────────────── */
+    #loading {
+      position: fixed; inset: 0;
+      background: rgba(255,255,255,0.97);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 9999;
+    }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 4px solid #e0e0e0;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p { margin-top: 14px; color: var(--text-muted); font-size: 16px; font-family: 'Libre Franklin', Verdana, sans-serif; }
+
+    /* ── Error ────────────────────────────────────────────────────────────── */
+    #error-msg {
+      display: none; margin: 32px;
+      background: #fef2f2; border: 1px solid #fca5a5;
+      border-radius: var(--radius); padding: 24px 28px;
+      color: #991b1b; line-height: 1.8;
+    }
+    #error-msg h3 { font-size: 16px; margin-bottom: 10px; }
+    #error-msg code {
+      display: block; margin: 8px 0;
+      background: #fee2e2; padding: 10px 14px;
+      border-radius: 3px; font-size: 13px; font-family: monospace;
+    }
+
+    /* ── Container ────────────────────────────────────────────────────────── */
+    .container { padding: var(--gap) 24px; max-width: 1700px; margin: 0 auto; }
+
+    /* ── Description card ────────────────────────────────────────────────── */
+    .desc-card {
+      background: var(--card);
+      border: 1px solid var(--border-light);
+      border-left: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      padding: 18px 24px;
+      margin-bottom: var(--gap);
+      line-height: 1.75;
+      font-size: 15.5px;
+      color: var(--text);
+    }
+    .desc-card a { color: var(--primary); text-decoration: none; }
+    .desc-card a:hover { text-decoration: underline; }
+    .desc-card p + p { margin-top: 8px; }
+
+    /* ── Filter bar ───────────────────────────────────────────────────────── */
+    .filter-bar {
+      background: var(--card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      padding: 12px 18px;
+      margin-bottom: var(--gap);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .filter-bar-label {
+      font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text-muted);
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .filter-divider { width: 1px; height: 22px; background: var(--border); flex-shrink: 0; }
+    .filter-selects { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; }
+    .filter-group   { display: flex; flex-direction: column; gap: 3px; min-width: 110px; flex: 1; }
+    .filter-group label {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      color: var(--text-muted);
+    }
+    .filter-group select {
+      padding: 7px 28px 7px 10px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      font-size: 14px; background: #fafafa; color: var(--text);
+      cursor: pointer; appearance: none;
+      font-family: inherit;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999999'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center;
+    }
+    .filter-group select:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(52,110,173,0.15); background: white;
+    }
+    .btn-reset {
+      padding: 8px 20px; background: #000000; color: #ffffff;
+      border: none; border-radius: 9999px; font-size: 13px; font-weight: 700;
+      font-family: inherit; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      letter-spacing: 0.3px;
+      transition: background 0.15s;
+    }
+    .btn-reset:hover { background: #333333; }
+
+    /* ── Main row (map + charts column) ──────────────────────────────────── */
+    .main-row {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: var(--gap);
+      margin-bottom: var(--gap);
+      align-items: stretch;
+    }
+    .charts-col {
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap);
+    }
+
+    /* ── Generic card ─────────────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 14px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      display: flex; align-items: center; gap: 8px;
+      color: #000;
+      background: var(--card);
+    }
+    [data-theme="dark"] .card-header { color: #c8d8ea; }
+
+    .card-header-right { margin-left: auto; font-size: 13px; font-weight: 500; color: var(--text-muted); text-transform: none; letter-spacing: 0; }
+
+    /* ── Map ──────────────────────────────────────────────────────────────── */
+    #map { height: 600px; }
+    .map-footer {
+      padding: 7px 16px; border-top: 1px solid var(--border-light);
+      font-size: 12px; color: var(--text-muted);
+      text-align: right; background: var(--toolbar-bg);
+    }
+
+    /* ── CRI Legend ───────────────────────────────────────────────────────── */
+    .cri-legend {
+      position: absolute; bottom: 28px; left: 12px; z-index: 1000;
+      background: rgba(255,255,255,0.95); border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px; font-size: 13px;
+      pointer-events: auto;
+    }
+    .cri-legend-title { font-weight: 700; margin-bottom: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+    .cri-gradient {
+      width: 120px; height: 10px; border-radius: 2px;
+      background: linear-gradient(to right, #BF3927, #CC6B2E, #C9962A, #5A8C51);
+    }
+    .cri-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── Charts row ───────────────────────────────────────────────────────── */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--gap);
+      margin-bottom: var(--gap);
+    }
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      padding: 16px;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .chart-card-header {
+      font-size: 13px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      display: flex; align-items: center; gap: 7px;
+      padding-bottom: 10px; margin-bottom: 14px;
+      border-bottom: 1px solid var(--border-light);
+      color: #000;
+    }
+    [data-theme="dark"] .chart-card-header { color: #c8d8ea; }
+
+    /* ── Table ────────────────────────────────────────────────────────────── */
+    .table-card {
+      background: var(--card); border-radius: var(--radius);
+      border: 1px solid var(--border-light); overflow: hidden; margin-bottom: 24px;
+    }
+    .table-toolbar {
+      padding: 12px 18px; border-bottom: 1px solid var(--border-light);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap; background: var(--card);
+    }
+    .table-toolbar-left { display: flex; align-items: center; gap: 10px; }
+    .table-toolbar h3   { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: #000; }
+    [data-theme="dark"] .table-toolbar h3 { color: #c8d8ea; }
+    .table-count        { font-size: 14px; color: var(--text-muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
+    .search-box {
+      padding: 7px 12px 7px 32px;
+      border: 1px solid var(--border); border-radius: 9999px;
+      font-size: 14px; width: 300px; color: var(--text);
+      font-family: inherit;
+      background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center;
+    }
+    .search-box:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(52,110,173,0.15); }
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+    thead th {
+      padding: 9px 14px; text-align: left;
+      font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      color: var(--text-muted); background: #f7f7f7;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap; cursor: pointer; user-select: none;
+    }
+    thead th:hover { background: #eeeeee; color: var(--navy); }
+    thead th.sort-asc::after  { content: ' ↑'; color: var(--primary); }
+    thead th.sort-desc::after { content: ' ↓'; color: var(--primary); }
+    tbody tr { border-bottom: 1px solid #eeeeee; transition: background 0.1s; }
+    tbody tr:nth-child(even) { background: var(--table-stripe); }
+    tbody tr:hover { background: var(--table-hover) !important; }
+    tbody td { padding: 8px 14px; vertical-align: middle; }
+    .badge {
+      display: inline-block; padding: 2px 10px;
+      border-radius: 3px; font-size: 12px; font-weight: 700;
+      letter-spacing: 0.2px; white-space: nowrap;
+    }
+    .b-green  { background: #dcfce7; color: #15803d; }
+    .b-red    { background: #fee2e2; color: #b91c1c; }
+    .b-blue   { background: #dbeafe; color: #1d4ed8; }
+    .b-purple { background: #ede9fe; color: #6d28d9; }
+    .b-gray   { background: #f0f0f0; color: #555555; }
+
+    /* ── Pagination ───────────────────────────────────────────────────────── */
+    .pagination {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 18px; border-top: 1px solid var(--border-light);
+      font-size: 14px; color: var(--text-muted);
+      background: var(--toolbar-bg); flex-wrap: wrap; gap: 8px;
+    }
+    .pg-controls { display: flex; gap: 4px; align-items: center; }
+    .pg-btn {
+      padding: 5px 12px; border: 1px solid var(--border); border-radius: 9999px;
+      background: white; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text);
+      font-family: inherit;
+      min-width: 30px; text-align: center; transition: background 0.1s;
+    }
+    .pg-btn:hover:not(:disabled) { background: #e8f1f8; border-color: var(--primary); color: var(--primary); }
+    .pg-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: 700; }
+    .pg-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── Responsive ───────────────────────────────────────────────────────── */
+    @media (max-width: 1200px) {
+      .main-row { grid-template-columns: 1fr 320px; }
+    }
+    @media (max-width: 1000px) {
+      .main-row { grid-template-columns: 1fr; }
+      .charts-row { grid-template-columns: 1fr; }
+      .charts-col { flex-direction: row; flex-wrap: wrap; }
+      .charts-col .panel-card { flex: 1; min-width: 260px; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 700px) {
+      .charts-col { flex-direction: column; }
+      .search-box { width: 100%; }
+    }
+
+    /* ── Clickable chart hint ─────────────────────────────────────────────── */
+    #chart-region, #chart-citytype, #chart-cri-citytype {
+      cursor: pointer;
+    }
+    .chart-click-hint {
+      font-size: 12px; color: var(--text-muted);
+      margin-top: 6px; text-align: center;
+      opacity: 0.7;
+    }
+
+    /* ── Popup ────────────────────────────────────────────────────────────── */
+    .leaflet-popup-content-wrapper { border-radius: 4px; }
+    /* Cluster circle overrides */
+    .marker-cluster-small        { background-color: rgba(0,0,0,0.35); }
+    .marker-cluster-small div    { background-color: rgba(0,0,0,0.65); }
+    .marker-cluster-medium       { background-color: rgba(0,0,0,0.45); }
+    .marker-cluster-medium div   { background-color: rgba(0,0,0,0.75); }
+    .marker-cluster-large        { background-color: rgba(0,0,0,0.55); }
+    .marker-cluster-large div    { background-color: rgba(0,0,0,0.85); }
+    .marker-cluster div          { color: #fff; font-weight: 700; }
+
+    .leaflet-popup-content { margin: 14px 16px; overflow-y: auto; }
+    .pop-title  { font-weight: 700; font-size: 15px; margin-bottom: 5px; color: #1a2f4e; }
+    .pop-loc    { color: #666666; font-size: 13px; margin-bottom: 8px; }
+    .pop-table  { font-size: 13px; width: 100%; border-collapse: collapse; }
+    .pop-table td { padding: 2px 0; }
+    .pop-table td:first-child { color: #999999; width: 110px; }
+    .pop-table td:last-child  { font-weight: 600; text-align: right; }
+    .pop-builder { margin-top: 7px; font-size: 12px; color: #999999; }
+  </style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loading">
+  <div class="spinner"></div>
+  <p>Loading Academia da Saúde data…</p>
+</div>
+
+<!-- Error message -->
+<div id="error-msg"></div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <h1></h1>
+    <p>Academia da Saúde Program (PAS - Health Academy) is a national health-promotion strategy embedded in Primary Health Care and delivered through public community spaces, or polos, that may include infrastructure, equipment, activities, and qualified personnel.</p>
+  </div>
+  <div class="header-right">
+    <div class="header-meta">
+      
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<div class="container" id="main-content" style="display:none">
+
+ //////// DESCRIPTION - MISSING SUPPLEMENTARY FILE
+  <!-- Description -->
+  <div class="desc-card">
+    <p>
+      This dashboard visualizes the geographical distribution of the <strong>Programa Academia da Saúde (PAS)</strong> polos across Brazil,
+      combining local-level data from the Ministry of Health with a <strong>Climate Resilience Index (CRI)</strong> computed using
+      climate exposure, sociodemographic, and built environment
+      indicators. Use the filters below to explore polos by region, state and city type. The map, charts, and table below update together to reveal spatial patterns of health-promotion strategy and the climate resilience.
+    </p>
+      <p style="margin-top: 12px; font-size: 14px;"> 
+
+      <strong>Location Accuracy Note:</strong> Based on a descriptive remote-assessment subset of 380 records, 65.5% of locations were clearly confirmed (n=249), 5.8% were uncertain (n=22), and 28.7% could not be remotely confirmed (n=109). Clear confirmation rates varied by macroregion with 57.3% in the North, 64.4% in the Northeast, 73.7% in the Central-West, 22.3% in the Southeast, and 74.1% in the South. By municipality size, confirmation was 65.5% in municipalities with ≤20,000 residents, 71.3% in those with 20,001–100,000 residents, and 59.1% in those with >100,000 residents. <em>Note: These descriptive patterns within the subset should not be interpreted as national estimates or evidence of subgroup differences.</em> 
+      </p> 
+
+  
+
+    <p style="margin-top: 8px; font-size: 14px;"> 
+
+      <strong>CRI Imputation Note:</strong> For 606 PAS locations that lacked a Climate Resilience Index (CRI) score at the specific census tract level, the average CRI value of all tracts within that municipality was imputed. Four (4) locations were dropped from the analysis entirely because they lacked CRI data at both the census tract and municipality levels. 
+
+    </p>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px;">
+      <strong>Citation:</strong> Salvador, C. C., Wang, Y., Augusto de Paula da Silva, A., Favarão Leão, A. L., Franco Silva, M., &amp; Reis, R. (2026). Geocoded Dataset of Brazil’s Academia da Saúde Program (PAS) [Dataset]. Harvard Dataverse. <a href="https://doi.org/10.7910/DVN/B3HNWS" target="_blank" rel="noopener">https://doi.org/10.7910/DVN/B3HNWS</a>
+    </p>
+    <p style="font-size:12px;color:var(--muted);margin-top:4px;">
+      <strong>Funding:</strong> This work was supported by the <a href="https://global.washu.edu/global-partnerships/seed-grants/" target="_blank" rel="noopener">Global Incubator Seed Grants Program at Washington University in St. Louis</a>, the National Institute of Diabetes and Digestive and Kidney Diseases (P30DK092950), and the Foundation for Barnes-Jewish Hospital.
+    </p>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <span class="filter-bar-label">Filters</span>
+    <div class="filter-divider"></div>
+    <div class="filter-selects">
+      <div class="filter-group">
+        <label>Region</label>
+        <select id="f-region" onchange="applyFilters()">
+          <option value="">All Regions</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>State (UF)</label>
+        <select id="f-state" onchange="applyFilters()">
+          <option value="">All States</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>City Type</label>
+        <select id="f-citytype" onchange="applyFilters()">
+          <option value="">All Types</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-reset" onclick="resetFilters()">Reset</button>
+  </div>
+
+  <!-- Map + all 3 charts -->
+  <div class="main-row">
+    <div class="card">
+      <div class="card-header">
+        Project Locations
+        <span class="card-header-right" id="map-count"></span>
+      </div>
+      <div id="map"></div>
+      <div class="map-footer">Click any marker for details</div>
+    </div>
+    <div class="charts-col">
+      <div class="panel-card">
+        <div class="panel-card-header">
+          Polos by Region
+        </div>
+        <canvas id="chart-region"></canvas>
+        <div class="chart-click-hint">Click a bar to filter by region</div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-card-header">
+          Polos by City Type
+        </div>
+        <canvas id="chart-citytype"></canvas>
+        <div class="chart-click-hint">Click a bar to filter by city type</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CRI Charts Row -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-card-header">
+        PAS CRI Score Distribution
+      </div>
+      <canvas id="chart-cri-hist"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-header">
+        Average PAS CRI by City Type
+      </div>
+      <canvas id="chart-cri-citytype"></canvas>
+      <div class="chart-click-hint">Click a bar to filter by city type</div>
+    </div>
+  </div>
+
+  <!-- Climate Hazards Charts Row -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-card-header">
+        Average PAS Climate Hazards by Region
+      </div>
+      <canvas id="chart-climate-region"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-header">
+        Average PAS Income vs. CRI
+      </div>
+      <canvas id="chart-income-cri"></canvas>
+    </div>
+  </div>
+
+  <!-- Data Table -->
+  <div class="table-card">
+    <div class="table-toolbar">
+      <div class="table-toolbar-left">
+        <h3>PAS Records</h3>
+        <span class="table-count" id="table-count"></span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input class="search-box" type="text" id="table-search"
+          placeholder="Search PAS code, municipality, state…" />
+        <button class="btn-reset" onclick="exportCSV()" title="Download filtered data as CSV">Export CSV</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table id="data-table">
+        <thead>
+          <tr>
+            <th onclick="sortTable('CNES')">PAS Code</th>
+            <th onclick="sortTable('City')">Municipality</th>
+            <th onclick="sortTable('State')">UF</th>
+            <th onclick="sortTable('Region')">Region</th>
+            <th onclick="sortTable('city_type')">City Type</th>
+            <th onclick="sortTable('_population')" style="text-align:right">City Population</th>
+            <th onclick="sortTable('_cri')" style="text-align:right">CRI</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <div id="pg-info"></div>
+      <div class="pg-controls" id="pg-controls"></div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+<script>
+'use strict';
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let allData      = [];
+let csvFields    = [];
+let criLookup    = {};
+let filteredData = [];
+let tableData    = [];
+let sortCol = '';
+let sortDir = 1;
+let currentPage = 1;
+const PAGE_SIZE = 50;
+
+let chartRegion, chartCitytype;
+let chartCriHist, chartCriCitytype, chartClimateRegion, chartIncomeCri;
+let leafletMap, markerCluster;
+
+// ─── Dark mode ───────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  const icon = document.getElementById('theme-icon');
+  if (icon) icon.textContent = isDark ? '🌙' : '☀️';
+  localStorage.setItem('pas-theme', isDark ? 'light' : 'dark');
+  updateChartColors();
+}
+function initTheme() {
+  const saved = localStorage.getItem('pas-theme');
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    const icon = document.getElementById('theme-icon');
+    if (icon) icon.textContent = '☀️';
+  }
+}
+function getGridColor() {
+  return getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() || '#f1f5f9';
+}
+function getTextColor() {
+  return getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#0f172a';
+}
+function getTextMutedColor() {
+  return getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#64748b';
+}
+function updateChartColors() {
+  const grid = getGridColor();
+  const text = getTextColor();
+  const muted = getTextMutedColor();
+  [chartRegion, chartCitytype, chartCriHist, chartCriCitytype, chartClimateRegion, chartIncomeCri].forEach(ch => {
+    if (!ch) return;
+    Object.values(ch.options.scales).forEach(s => {
+      if (s.grid) s.grid.color = grid;
+      if (s.ticks) s.ticks.color = muted;
+      if (s.title) s.title.color = muted;
+    });
+    if (ch.options.plugins && ch.options.plugins.legend && ch.options.plugins.legend.labels) {
+      ch.options.plugins.legend.labels.color = muted;
+    }
+    ch.update();
+  });
+}
+initTheme();
+
+// ─── Debounce utility ────────────────────────────────────────────────────────
+function debounce(fn, ms) {
+  let timer;
+  return function() {
+    clearTimeout(timer);
+    const args = arguments, ctx = this;
+    timer = setTimeout(function() { fn.apply(ctx, args); }, ms);
+  };
+}
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
+// Parse numeric cell: '' → NaN (missing), '0' → 0 (real zero)
+function pNum(s) {
+  if (s == null || s === '') return NaN;
+  var v = parseFloat(s);
+  return isNaN(v) ? NaN : v;
+}
+
+function parseDataNum(value, decimalPlaces) {
+  if (value == null || value === '') return NaN;
+  const text = String(value).trim();
+  if (/^\d{1,3}(?:\.\d{3}){2,}$/.test(text)) {
+    return Number(text.replace(/\./g, '')) / Math.pow(10, decimalPlaces);
+  }
+  return pNum(text);
+}
+
+function parseDataPct(value) {
+  const n = parseDataNum(value, 10);
+  return n <= 1 ? n * 100 : n;
+}
+
+// Brazilian number format: "13.830.963" or "13.809.147,96"
+function parseBRNum(s) {
+  if (!s || !s.trim()) return 0;
+  return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
+}
+
+function fmtN(n) {
+  return Math.round(n).toLocaleString('en-US');
+}
+
+function fmtBRL(n) {
+  if (n >= 1e9) return 'R$ ' + (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return 'R$ ' + (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return 'R$ ' + (n / 1e3).toFixed(0) + 'K';
+  return 'R$ ' + n.toFixed(0);
+}
+
+function fmtBRLFull(n) {
+  return 'R$ ' + Math.round(n).toLocaleString('pt-BR');
+}
+
+// HTML-escape for safe interpolation into popup markup
+function escHtml(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ─── Load CSVs ────────────────────────────────────────────────────────────────
+function loadCSV(url) {
+  return fetch(url)
+    .then(function(resp) {
+      if (!resp.ok) throw new Error('HTTP ' + resp.status + ' loading ' + url);
+      return resp.text();
+    })
+    .then(function(csvText) {
+      return new Promise(function(resolve, reject) {
+        let cityTypeHeaders = 0;
+        Papa.parse(csvText, {
+          header: true,
+          skipEmptyLines: true,
+          transformHeader: function(header) {
+            if (header !== 'city_type') return header;
+            cityTypeHeaders++;
+            return cityTypeHeaders === 1 ? 'city_type_code' : 'city_type';
+          },
+          complete: function(results) {
+            csvFields = results.meta.fields;
+            resolve(results.data);
+          },
+          error: function(err) { reject(err); }
+        });
+      });
+    });
+}
+
+Promise.all([loadCSV('PAS-3791-Matched-Only-7Digit.csv')])
+  .then(function(data) {
+    allData = data[0];
+
+    allData.forEach(function(d) {
+      d._cri = pNum(d.CRI);
+      d._population = parseDataNum(d.population, 0);
+      d._avg_income = parseDataNum(d.avg_income, 6);
+      d._population = parseDataNum(d._population, 6);
+      d._pct_bbi = parseDataPct(d.pct_bbi);
+      d._pct_lit = parseDataPct(d.pct_lit);
+      d._pct_pip = parseDataPct(d.pct_pip);
+      d._pct_sew = parseDataPct(d.pct_sew);
+      d._pct_gar = parseDataPct(d.pct_gar);
+      d._pct_paved = parseDataPct(d.pct_paved);
+      d._pct_bus = parseDataPct(d.pct_bus);
+      d._igni = pNum(d.igni);
+      d._ehtd = pNum(d.ehtd);
+      d._eprd = pNum(d.eprd);
+      d._edrm = pNum(d.edrm);
+      d._lat = NaN;
+      d._lng = NaN;
+
+      if (d.geometry) {
+        const match = d.geometry.match(/POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)/i);
+        if (match) {
+          d._lng = parseFloat(match[1]);
+          d._lat = parseFloat(match[2]);
+        }
+      }
+    });
+
+    document.getElementById('main-content').style.display = 'block';
+    initFilters();
+    initMap();
+    filteredData = [...allData];
+    tableData = [...allData];
+    updateAll();
+    setupChartClickFilters();
+
+    document.getElementById('loading').style.display = 'none';
+
+    function fitAll() {
+      leafletMap.invalidateSize();
+      if (markerCluster.getLayers().length > 0) {
+        leafletMap.fitBounds(markerCluster.getBounds(), { padding: [24, 24] });
+      }
+      [chartRegion, chartCitytype, chartCriHist, chartCriCitytype, chartClimateRegion, chartIncomeCri]
+        .forEach(function(chart) { chart.resize(); });
+    }
+    setTimeout(fitAll, 50);
+    setTimeout(fitAll, 350);
+  })
+  .catch(function(err) {
+    showError(
+      'Could not load CSV data.<br>Make sure you are serving this file from a local server ' +
+      '(e.g. <code>python3 -m http.server</code> or VS Code Live Server).<br>' +
+      'Error: ' + escHtml(err.message)
+    );
+  });
+
+function showError(msg) {
+  document.getElementById('loading').style.display = 'none';
+  const el = document.getElementById('error-msg');
+  el.style.display = 'block';
+  el.innerHTML = '<h3>Failed to load data</h3>' + msg;
+}
+
+// ─── Translation map ──────────────────────────────────────────────────────────
+const TRANSLATE = {
+  // Regions
+  'Norte':        'North',
+  'Nordeste':     'Northeast',
+  'Sul':          'South',
+  'Sudeste':      'Southeast',
+  'Centro-Oeste': 'Center-West',
+  // Statuses
+  'Concluído':     'Completed',
+  'Não Concluído': 'Not Completed',
+  // Modalities
+  'Entidades': 'Entities',
+  // City types
+  'Capital Regional':    'Regional Capital',
+  'Centro Local':        'Local Center',
+  'Centro Sub-Regional': 'Sub-Regional Center',
+  'Centro de Zona':      'Zone Center',
+  'Metrópole':           'Metropolis',
+};
+function tr(val) { return TRANSLATE[val] || val || '—'; }
+
+// ─── Filters ──────────────────────────────────────────────────────────────────
+function initFilters() {
+  const uniq = f => [...new Set(allData.map(d => d[f]).filter(Boolean))].sort();
+
+  _populateSelect('f-region',   uniq('Region'));
+  _populateSelect('f-state',    uniq('State'));
+  _populateSelect('f-citytype', uniq('city_type'));
+
+  // Cascading: when region changes, narrow the state dropdown
+  document.getElementById('f-region').addEventListener('change', function() {
+    const region = this.value;
+    const stateSel = document.getElementById('f-state');
+    const prevState = stateSel.value;
+    // Clear all options except the first "All States"
+    while (stateSel.options.length > 1) stateSel.remove(1);
+    const states = region
+      ? [...new Set(allData.filter(d => d.Region === region).map(d => d.State).filter(Boolean))].sort()
+      : [...new Set(allData.map(d => d.State).filter(Boolean))].sort();
+    _populateSelect('f-state', states);
+    // Restore previous selection only if it is still valid
+    stateSel.value = states.includes(prevState) ? prevState : '';
+    applyFilters();
+  });
+}
+
+function _populateSelect(id, vals) {
+  const sel = document.getElementById(id);
+  vals.forEach(v => {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = tr(v);
+    sel.appendChild(o);
+  });
+}
+
+function applyFilters() {
+  const get = id => document.getElementById(id).value;
+  const region   = get('f-region');
+  const state    = get('f-state');
+  const citytype = get('f-citytype');
+
+  filteredData = allData.filter(d => {
+    if (region   && d.Region   !== region)   return false;
+    if (state    && d.State    !== state)    return false;
+    if (citytype && d.city_type                 !== citytype) return false;
+    return true;
+  });
+
+  tableData   = [...filteredData];
+  currentPage = 1;
+  document.getElementById('table-search').value = '';
+  updateAll();
+}
+
+function resetFilters() {
+  // Reset all dropdowns to first option
+  ['f-region', 'f-citytype', 'f-state']
+    .forEach(id => document.getElementById(id).value = '');
+  // Repopulate state with all states (it may have been narrowed by region cascade)
+  const stateSel = document.getElementById('f-state');
+  while (stateSel.options.length > 1) stateSel.remove(1);
+  const allStates = [...new Set(allData.map(d => d.State).filter(Boolean))].sort();
+  _populateSelect('f-state', allStates);
+  stateSel.value = '';
+  applyFilters();
+}
+
+// ─── Header pills ────────────────────────────────────────────────────────────
+function updatePills() {
+  const d = filteredData;
+  const n = d.length;
+  const states  = new Set(d.map(r => r.State).filter(Boolean));
+  const regions = new Set(d.map(r => r.Region).filter(Boolean));
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('pill-projects', fmtN(n) + ' Projects');
+  set('pill-states',   states.size + ' States');
+  set('pill-regions',  regions.size + ' Regions');
+  const criVals = d.filter(r => !isNaN(r._cri));
+  const avgCri = criVals.length > 0 ? criVals.reduce((s, r) => s + r._cri, 0) / criVals.length : NaN;
+  set('pill-cri', 'Avg CRI: ' + (isNaN(avgCri) ? '—' : avgCri.toFixed(3)));
+}
+
+// ─── Map ──────────────────────────────────────────────────────────────────────
+function initMap() {
+  leafletMap = L.map('map', { preferCanvas: true }).setView([-15.5, -50], 4);
+
+  const satellite = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    { attribution: 'Imagery &copy; Esri &mdash; Source: Esri, USGS, NOAA', maxZoom: 19 }
+  );
+  const streets = L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', maxZoom: 19 }
+  );
+  satellite.addTo(leafletMap);
+
+  // Reference overlay: boundaries + labels (shown on satellite only)
+  const refOverlay = L.tileLayer(
+    'https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+    { attribution: '', maxZoom: 19, opacity: 0.9 }
+  );
+  refOverlay.addTo(leafletMap);
+
+  L.control.layers(
+    { 'Satellite': satellite, 'Street Map': streets },
+    { 'Labels': refOverlay },
+    { position: 'topright', collapsed: false }
+  ).addTo(leafletMap);
+
+  markerCluster = L.markerClusterGroup({ maxClusterRadius: 40, chunkedLoading: true });
+  leafletMap.addLayer(markerCluster);
+}
+
+// CRI color scale: Pew red (0) → Pew orange → Pew yellow → Pew green (0.5, normalized to full range)
+const CRI_MAX = 0.5; // observed ceiling of CRI scores
+// Pew palette stops: #BF3927 → #CC6B2E → #C9962A → #5A8C51
+const CRI_STOPS = [[191,57,39],[204,107,46],[201,150,42],[90,140,81]];
+function criColor(cri) {
+  if (isNaN(cri)) return '#A4A4A4'; // Pew gray for missing
+  const c = Math.max(0, Math.min(1, cri / CRI_MAX)); // normalize to [0,1]
+  if (c < 0.33) {
+    return lerpColor(CRI_STOPS[0], CRI_STOPS[1], c / 0.33);
+  } else if (c < 0.66) {
+    return lerpColor(CRI_STOPS[1], CRI_STOPS[2], (c - 0.33) / 0.33);
+  } else {
+    return lerpColor(CRI_STOPS[2], CRI_STOPS[3], (c - 0.66) / 0.34);
+  }
+}
+function lerpColor(a, b, t) {
+  const r = Math.round(a[0] + (b[0]-a[0])*t);
+  const g = Math.round(a[1] + (b[1]-a[1])*t);
+  const bl = Math.round(a[2] + (b[2]-a[2])*t);
+  return `rgb(${r},${g},${bl})`;
+}
+
+function fmtPct(v) { return isNaN(v) ? '—' : v.toFixed(1) + '%'; }
+function fmtDec(v, d) { return isNaN(v) ? '—' : v.toFixed(d || 2); }
+
+function updateMap() {
+  markerCluster.clearLayers();
+  const layers = [];
+
+  filteredData.forEach(function(d) {
+    if (isNaN(d._lat) || isNaN(d._lng) || d._lat === 0) return;
+
+    const m = L.circleMarker([d._lat, d._lng], {
+      radius: 6,
+      fillColor: '#000000',
+      color: '#000000',
+      weight: 1.5,
+      opacity: 1,
+      fillOpacity: 0.85
+    });
+
+      // CRI section for popup
+    const criSection = !isNaN(d._cri) ? `
+        <tr><td colspan="2" style="padding-top:8px;font-weight:700;font-size:13px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">Climate Resilience</td></tr>
+        <tr><td>CRI Score</td><td><span style="color:${criColor(d._cri)};font-weight:800">${fmtDec(d._cri, 3)}</span></td></tr>
+        <tr><td>Avg Income</td><td>R$ ${isNaN(d._avg_income) ? '—' : fmtN(Math.round(d._avg_income))}</td></tr>
+        <tr><td>Population</td><td>${d._total_pop > 0 ? fmtN(d._total_pop) : '—'}</td></tr>
+        <tr><td>Literacy</td><td>${fmtPct(d._pct_lit)}</td></tr>
+        <tr><td>Piped Water</td><td>${fmtPct(d._pct_pip)}</td></tr>
+        <tr><td>Sewage</td><td>${fmtPct(d._pct_sew)}</td></tr>
+        <tr><td>Wildfires/yr</td><td>${fmtDec(d._igni, 1)}</td></tr>
+        <tr><td>Extreme Heat days/yr</td><td>${fmtDec(d._ehtd, 1)}</td></tr>
+        <tr><td>Extreme Rain days/yr</td><td>${fmtDec(d._eprd, 1)}</td></tr>
+        <tr><td>Drought months/yr</td><td>${fmtDec(d._edrm, 1)}</td></tr>
+    ` : '';
+
+    m.bindPopup(`
+      <div style="font-family:-apple-system,sans-serif;min-width:250px;max-width:300px">
+        <div class="pop-title">PAS Polo: ${escHtml(d.CNES)}</div>
+        <div class="pop-loc">${escHtml(d.City)}, ${escHtml(d.State)}</div>
+        <table class="pop-table">
+          <tr><td>Region</td><td>${escHtml(d.Region)}</td></tr>
+          <tr><td>City Type</td><td>${escHtml(d.city_type)}</td></tr>
+          ${criSection}
+        </table>
+      </div>
+    `, { maxWidth: 360, maxHeight: 450, autoPan: true, autoPanPaddingTopLeft: [10, 10], autoPanPaddingBottomRight: [10, 10] });
+
+    layers.push(m);
+  });
+
+  markerCluster.addLayers(layers);
+  document.getElementById('map-count').textContent = fmtN(layers.length) + ' mapped';
+
+  // Re-fit the map view to the filtered markers
+  if (layers.length > 0) {
+    leafletMap.fitBounds(markerCluster.getBounds(), { padding: [24, 24], maxZoom: 10 });
+  }
+}
+
+// ─── Charts ───────────────────────────────────────────────────────────────────
+// Set global Chart.js defaults for larger fonts
+Chart.defaults.font.size = 13;
+
+// Pew Research-inspired palette (muted, professional)
+// Confirmed Pew colors: #436983 (blue), #BF3927 (red), #A4A4A4 (gray), #D7D7D7 (grid)
+const C = {
+  blue:   '#436983',
+  red:    '#BF3927',
+  orange: '#CC6B2E',
+  green:  '#5A8C51',
+  purple: '#7B6FAE',
+  teal:   '#3D7A8A',
+  pink:   '#B05A7A',
+  yellow: '#C9962A',
+  indigo: '#4A5E82',
+  slate:  '#A4A4A4',
+  cyan:   '#3A8094',
+  lime:   '#6A9055'
+};
+const PALETTE = Object.values(C);
+
+function groupBy(data, field) {
+  return data.reduce((acc, d) => {
+    const k = tr(d[field] || 'Unknown');
+    acc[k] = (acc[k] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function updateCharts() {
+
+// ── PAS Polos by Region ────────────────────────────────────────────
+// ---- 1. Extract unique regions and count the number of Polos per region
+  const regions = [...new Set(filteredData.map(d => d.Region).filter(Boolean))].sort();
+  const polosCount = {};
+  
+  filteredData.forEach(d => {
+    const r = d.Region || 'Unknown';
+    polosCount[r] = (polosCount[r] || 0) + 1; // Count 1 for each polo
+  });
+  
+  // 2. Update or create the chart
+  if (chartRegion) {
+    // Update existing chart instance
+    chartRegion.data.labels = regions;
+    chartRegion.data.datasets[0].data = regions.map(r => polosCount[r] || 0);
+    chartRegion.update();
+  } else {
+    // Create new chart instance targeting the 'chart-region' HTML canvas
+    chartRegion = new Chart(document.getElementById('chart-region'), {
+      type: 'bar',
+      data: {
+        labels: regions, // Uses the regions array for the X-axis
+        datasets: [
+          {
+            label: 'PAS Polos',
+            data: regions.map(r => polosCount[r] || 0), // Maps the counts to the regions
+            backgroundColor: C.blue + 'cc',
+            yAxisID: 'y'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: { 
+          legend: { position: 'bottom', labels: { font: { size: 13 }, usePointStyle: true } } 
+        },
+        scales: {
+          x:  { grid: { display: false } },
+          y:  { 
+            position: 'left',  
+            grid: { color: '#D7D7D7' }, 
+            title: { display: true, text: 'Number of Polos', font: { size: 13 } }, 
+            ticks: { precision: 0 }, // Ensures the y-axis only shows whole numbers
+            afterFit(scale) { scale.width = Math.max(scale.width, 52); } 
+          }
+        }
+      }
+    });
+  }
+
+   // ── Projects by city type ──────────────────────────────────────────────────
+  const g = groupBy(filteredData, 'city_type');
+  const entries = Object.entries(g).sort((a, b) => b[1] - a[1]);
+
+  if (chartCitytype) {
+    chartCitytype.data.labels = entries.map(e => e[0]);
+    chartCitytype.data.datasets[0].data = entries.map(e => e[1]);
+    chartCitytype.data.datasets[0].backgroundColor = PALETTE.slice(0, entries.length);
+    chartCitytype.update();
+  } else {
+    chartCitytype = new Chart(document.getElementById('chart-citytype'), {
+      type: 'bar',
+      data: {
+        labels: entries.map(e => e[0]),
+        datasets: [{
+          label: 'Projects',
+          data: entries.map(e => e[1]),
+          backgroundColor: PALETTE.slice(0, entries.length)
+        }]
+      },
+      options: {
+        responsive: true,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: '#D7D7D7' } },
+          y: { grid: { display: false }, ticks: { autoSkip: false }, afterFit(scale) { scale.width = Math.max(scale.width, 130); } }
+        }
+      }
+    });
+  }
+}
+
+// ─── CRI Charts ──────────────────────────────────────────────────────────────
+function updateCriCharts() {
+  const withCri = filteredData.filter(d => !isNaN(d._cri));
+
+  // ── CRI Histogram ────────────────────────────────────────────────────────
+  const bins = 20;
+  const counts = new Array(bins).fill(0);
+  withCri.forEach(d => {
+    const idx = Math.min(Math.floor((d._cri / CRI_MAX) * bins), bins - 1);
+    counts[idx]++;
+  });
+  const binLabels = [];
+  for (let i = 0; i < bins; i++) {
+    const lo = (i / bins * CRI_MAX).toFixed(2);
+    const hi = ((i + 1) / bins * CRI_MAX).toFixed(2);
+    binLabels.push(lo + '–' + hi);
+  }
+  const binColors = binLabels.map((_, i) => criColor((i + 0.5) / bins * CRI_MAX));
+
+  if (chartCriHist) {
+    chartCriHist.data.datasets[0].data = counts;
+    chartCriHist.data.datasets[0].backgroundColor = binColors;
+    chartCriHist.update();
+  } else {
+    chartCriHist = new Chart(document.getElementById('chart-cri-hist'), {
+      type: 'bar',
+      data: {
+        labels: binLabels,
+        datasets: [{ label: 'Projects', data: counts, backgroundColor: binColors }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { maxRotation: 90, font: { size: 11 } } },
+          y: { grid: { color: '#D7D7D7' }, title: { display: true, text: 'Projects', font: { size: 13 } } }
+        }
+      }
+    });
+  }
+
+  // ── Avg CRI by City Type ─────────────────────────────────────────────────
+  const criByType = {}, countByType = {};
+  withCri.forEach(d => {
+    const t = tr(d.city_type || 'Unknown');
+    criByType[t]   = (criByType[t] || 0) + d._cri;
+    countByType[t] = (countByType[t] || 0) + 1;
+  });
+  const typeEntries = Object.keys(criByType).map(k => [k, criByType[k] / countByType[k]])
+    .sort((a, b) => a[1] - b[1]);
+  const typeLabels = typeEntries.map(e => e[0]);
+  const typeAvgs   = typeEntries.map(e => e[1]);
+  const typeColors = typeAvgs.map(v => criColor(v));
+
+  if (chartCriCitytype) {
+    chartCriCitytype.data.labels = typeLabels;
+    chartCriCitytype.data.datasets[0].data = typeAvgs;
+    chartCriCitytype.data.datasets[0].backgroundColor = typeColors;
+    chartCriCitytype.update();
+  } else {
+    chartCriCitytype = new Chart(document.getElementById('chart-cri-citytype'), {
+      type: 'bar',
+      data: {
+        labels: typeLabels,
+        datasets: [{ label: 'Avg CRI', data: typeAvgs, backgroundColor: typeColors }]
+      },
+      options: {
+        responsive: true,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: '#D7D7D7' }, min: 0, max: 0.5, title: { display: true, text: 'Average CRI', font: { size: 13 } } },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // ── Climate Hazards by Region ────────────────────────────────────────────
+  const hazRegion = {};
+  withCri.forEach(d => {
+    const r = tr(d.Region || 'Unknown');
+    if (!hazRegion[r]) hazRegion[r] = { igni: 0, ehtd: 0, eprd: 0, edrm: 0, n: 0 };
+    const h = hazRegion[r];
+    if (!isNaN(d._igni)) h.igni += d._igni;
+    if (!isNaN(d._ehtd)) h.ehtd += d._ehtd;
+    if (!isNaN(d._eprd)) h.eprd += d._eprd;
+    if (!isNaN(d._edrm)) h.edrm += d._edrm;
+    h.n++;
+  });
+  const hazLabels = Object.keys(hazRegion).sort();
+  const mkAvg = (field) => hazLabels.map(r => hazRegion[r].n > 0 ? hazRegion[r][field] / hazRegion[r].n : 0);
+
+  const hazDS = [
+    { label: 'Wildfires/yr',         data: mkAvg('igni'), backgroundColor: C.red    + 'cc' },
+    { label: 'Extreme Heat days/yr', data: mkAvg('ehtd'), backgroundColor: C.orange + 'cc' },
+    { label: 'Extreme Rain days/yr', data: mkAvg('eprd'), backgroundColor: C.blue   + 'cc' },
+    { label: 'Drought months/yr',    data: mkAvg('edrm'), backgroundColor: C.purple + 'cc' }
+  ];
+
+  if (chartClimateRegion) {
+    chartClimateRegion.data.labels = hazLabels;
+    hazDS.forEach((ds, i) => { chartClimateRegion.data.datasets[i].data = ds.data; });
+    chartClimateRegion.update();
+  } else {
+    chartClimateRegion = new Chart(document.getElementById('chart-climate-region'), {
+      type: 'bar',
+      data: { labels: hazLabels, datasets: hazDS },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 13 }, usePointStyle: true } } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { grid: { color: '#D7D7D7' }, title: { display: true, text: 'Average annual events', font: { size: 13 } } }
+        }
+      }
+    });
+  }
+
+  // ── Income vs CRI scatter ───────────────────────────────────────────────
+  const scatterData = withCri
+    .filter(d => !isNaN(d._avg_income) && d._avg_income > 0)
+    .map(d => ({ x: d._avg_income, y: d._cri }));
+
+  // Sample up to 2000 points for performance
+  const sampled = scatterData.length > 2000
+    ? scatterData.sort(() => Math.random() - 0.5).slice(0, 2000)
+    : scatterData;
+
+  if (chartIncomeCri) {
+    chartIncomeCri.data.datasets[0].data = sampled;
+    chartIncomeCri.update();
+  } else {
+    chartIncomeCri = new Chart(document.getElementById('chart-income-cri'), {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          label: 'Project',
+          data: sampled,
+          backgroundColor: sampled.map(p => criColor(p.y) ),
+          pointRadius: 3,
+          pointHoverRadius: 5
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: '#D7D7D7' }, title: { display: true, text: 'Avg Household Income (R$)', font: { size: 13 } } },
+          y: { grid: { color: '#D7D7D7' }, title: { display: true, text: 'CRI Score', font: { size: 13 } }, min: 0 }
+        }
+      }
+    });
+  }
+}
+
+// ─── Table ────────────────────────────────────────────────────────────────────
+function tableSearch() {
+  const q = document.getElementById('table-search').value.toLowerCase();
+  if (!q) {
+    tableData = [...filteredData];
+  } else {
+    tableData = filteredData.filter(d =>
+      String(d.CNES || '').toLowerCase().includes(q) ||
+      String(d.City || '').toLowerCase().includes(q) ||
+      String(d.State || '').toLowerCase().includes(q) ||
+      String(d.Region || '').toLowerCase().includes(q) ||
+      (d.city_type                     || '').toLowerCase().includes(q)
+    );
+  }
+  currentPage = 1;
+  renderTable();
+}
+
+function sortTable(col) {
+  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
+
+  if (sortCol === col) sortDir *= -1;
+  else { sortCol = col; sortDir = 1; }
+
+  const activeEl = document.querySelector(`thead th[onclick="sortTable('${col}')"]`);
+  if (activeEl) activeEl.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+
+  tableData.sort((a, b) => {
+    const av = a[col], bv = b[col];
+    if (typeof av === 'number' && typeof bv === 'number') {
+      if (isNaN(av) && isNaN(bv)) return 0;
+      if (isNaN(av)) return 1;   // missing always goes to bottom
+      if (isNaN(bv)) return -1;
+      return (av - bv) * sortDir;
+    }
+    return String(av || '').localeCompare(String(bv || '')) * sortDir;
+  });
+
+  currentPage = 1;
+  renderTable();
+}
+
+function badge(text, cls) {
+  return `<span class="badge ${cls}">${escHtml(text)}</span>`;
+}
+
+function statusBadge(s) {
+  if (s === 'Concluído')     return badge(tr(s), 'b-green');
+  if (s === 'Não Concluído') return badge(tr(s), 'b-red');
+  return badge(tr(s) || '—', 'b-gray');
+}
+
+function modalBadge(m) {
+  return badge(tr(m) || '—', m === 'FAR' ? 'b-blue' : 'b-purple');
+}
+
+function renderTable() {
+  const start      = (currentPage - 1) * PAGE_SIZE;
+  const page       = tableData.slice(start, start + PAGE_SIZE);
+  const total      = tableData.length;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  document.getElementById('table-body').innerHTML = page.map(d => `
+    <tr>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+          title="${escHtml(d.CNES)}">${escHtml(d.CNES) || '—'}</td>
+      <td style="white-space:nowrap">${escHtml(d.City || '')}</td>
+      <td><strong>${escHtml(d.State) || '—'}</strong></td>
+      <td style="white-space:nowrap">${escHtml(tr(d.Region))}</td>
+      <td style="font-size:14px;color:var(--text-muted);white-space:nowrap">${escHtml(tr(d.city_type))}</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">${isNaN(d._population) ? '—' : fmtN(d._population)}</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:${criColor(d._cri)}">${
+        isNaN(d._cri) ? '—' : d._cri.toFixed(3)
+      }</td>
+    </tr>
+  `).join('');
+
+  document.getElementById('table-count').textContent = `(${fmtN(total)} records)`;
+  document.getElementById('pg-info').textContent =
+    `Showing ${fmtN(start + 1)}–${fmtN(Math.min(start + PAGE_SIZE, total))} of ${fmtN(total)}`;
+
+  // Pagination
+  let html = `<button class="pg-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
+  let startP = Math.max(1, currentPage - 2);
+  let endP   = Math.min(totalPages, startP + 4);
+  if (endP - startP < 4) startP = Math.max(1, endP - 4);
+  for (let p = startP; p <= endP; p++) {
+    html += `<button class="pg-btn ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
+  }
+  html += `<button class="pg-btn" onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
+  document.getElementById('pg-controls').innerHTML = html;
+}
+
+function goPage(p) {
+  const total = Math.ceil(tableData.length / PAGE_SIZE);
+  if (p < 1 || p > total) return;
+  currentPage = p;
+  renderTable();
+  document.querySelector('.table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ─── Export CSV ───────────────────────────────────────────────────────────────
+function exportCSV() {
+  const escape = v => {
+    const s = String(v == null ? '' : v);
+    return s.includes(',') || s.includes('"') || s.includes('\n')
+      ? '"' + s.replace(/"/g, '""') + '"'
+      : s;
+  };
+  const rows = [csvFields.map(escape).join(',')];
+  tableData.forEach(d => rows.push(csvFields.map(field => escape(d[field])).join(',')));
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'PAS-3791-Matched-Only-7Digit.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ─── Debounced search wiring ─────────────────────────────────────────────────
+document.getElementById('table-search').addEventListener('input', debounce(tableSearch, 200));
+
+// ─── Orchestrate ──────────────────────────────────────────────────────────────
+function updateAll() {
+  updatePills();
+  updateMap();
+  updateCharts();
+  updateCriCharts();
+  renderTable();
+  updateFilterHighlights();
+}
+
+// ─── Filter highlight ────────────────────────────────────────────────────────
+function updateFilterHighlights() {
+  const ids = ['f-region', 'f-state', 'f-citytype'];
+  let active = 0;
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    const group = el.closest('.filter-group');
+    if (el.value) {
+      group.classList.add('filter-active');
+      active++;
+    } else {
+      group.classList.remove('filter-active');
+    }
+  });
+  const btn = document.querySelector('.btn-reset');
+  if (active > 0) {
+    btn.innerHTML = 'Reset <span class="btn-reset-count">' + active + '</span>';
+  } else {
+    btn.textContent = 'Reset';
+  }
+}
+
+// ─── Chart click → filter ────────────────────────────────────────────────────
+// Reverse translation map for click-to-filter
+const REVERSE_TR = {};
+Object.entries(TRANSLATE).forEach(function(e) { REVERSE_TR[e[1]] = e[0]; });
+function reverseTranslate(val) { return REVERSE_TR[val] || val; }
+
+function setupChartClickFilters() {
+  // Region chart: click a bar → set region filter
+  if (chartRegion) {
+    document.getElementById('chart-region').onclick = function(evt) {
+      const points = chartRegion.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
+      if (points.length > 0) {
+        const label = chartRegion.data.labels[points[0].index];
+        const original = reverseTranslate(label);
+        const sel = document.getElementById('f-region');
+        // Toggle: if already selected, clear it
+        sel.value = sel.value === original ? '' : original;
+        sel.dispatchEvent(new Event('change'));
+      }
+    };
+  }
+  // City type chart: click a bar → set city type filter
+  if (chartCitytype) {
+    document.getElementById('chart-citytype').onclick = function(evt) {
+      const points = chartCitytype.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
+      if (points.length > 0) {
+        const label = chartCitytype.data.labels[points[0].index];
+        const original = reverseTranslate(label);
+        const sel = document.getElementById('f-citytype');
+        sel.value = sel.value === original ? '' : original;
+        applyFilters();
+      }
+    };
+  }
+  
+  // CRI by City Type: click → set city type filter
+  if (chartCriCitytype) {
+    document.getElementById('chart-cri-citytype').onclick = function(evt) {
+      const points = chartCriCitytype.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
+      if (points.length > 0) {
+        const label = chartCriCitytype.data.labels[points[0].index];
+        const original = reverseTranslate(label);
+        const sel = document.getElementById('f-citytype');
+        sel.value = sel.value === original ? '' : original;
+        applyFilters();
+      }
+    };
+  }
+}
+
+</script>
+</body>
+</html>
