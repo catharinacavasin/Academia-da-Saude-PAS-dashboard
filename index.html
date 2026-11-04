@@ -1050,7 +1050,6 @@ function updateMap() {
         <tr><td colspan="2" style="padding-top:8px;font-weight:700;font-size:13px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">Climate Resilience</td></tr>
         <tr><td>CRI Score</td><td><span style="color:${criColor(d._cri)};font-weight:800">${fmtDec(d._cri, 3)}</span></td></tr>
         <tr><td>Avg Income</td><td>R$ ${isNaN(d._avg_income) ? '—' : fmtN(Math.round(d._avg_income))}</td></tr>
-        <tr><td>Population</td><td>${d._total_pop > 0 ? fmtN(d._total_pop) : '—'}</td></tr>
         <tr><td>Literacy</td><td>${fmtPct(d._pct_lit)}</td></tr>
         <tr><td>Piped Water</td><td>${fmtPct(d._pct_pip)}</td></tr>
         <tr><td>Sewage</td><td>${fmtPct(d._pct_sew)}</td></tr>
