@@ -506,7 +506,7 @@
 
     </p>
       <p style="font-size:12px;color:var(--muted);margin-top:8px;">
-      <strong>Citation:</strong> Salvador, Catharina; Reis, Rodrigo; Silva, Alexandre; Franco Silva, Milena; Wang, Yi; VanDeVoorde, Nora; et al. (2026) Academia da Saude (PAS) Dataset <a href= "https://doi.org/10.5281/zenodo.23810776"target="_blank" rel="noopener">https://doi.org/10.5281/zenodo.23810776</a>
+      <strong>Citation:</strong> Salvador, Catharina; Reis, Rodrigo; Silva, Alexandre; Franco Silva, Milena; Wang, Yi; VanDeVoorde, Nora; et al. (2026) Academia da Saude (PAS) Dataset <a href= "https://doi.org/10.5281/zenodo.23810775"target="_blank" rel="noopener">https://doi.org/10.5281/zenodo.23810775</a>
       
       <strong>Supplementary material:</strong>  Reis, Rodrigo; Salvador, Catharina; Silva, Alexandre; Franco Silva, Milena; Wang, Yi; VanDeVoorde, Nora; et al. (2026). Academia da Saude Dataset - Street view photo library, shapefiles and phyton library. figshare. Figure. <a href="https://doi.org/10.6084/m9.figshare.33372634" target="_blank" rel="noopener">https://doi.org/10.6084/m9.figshare.33372634</a>
 <strong>Reference:</strong> Instituto Brasileiro de Geografia e Estatística. Coordenação de Geografia. (2020). Regiões de influência das cidades: 2018. IBGE <a href="https://www.ibge.gov.br/geociencias/cartas-e-mapas/redes-geograficas/15798-regioes-de-influencia-das-cidades.html" target="_blank" rel="noopener">https://www.ibge.gov.br/geociencias/cartas-e-mapas/redes-geograficas/15798-regioes-de-influencia-das-cidades.html</a>
@@ -1050,6 +1050,7 @@ function updateMap() {
         <tr><td colspan="2" style="padding-top:8px;font-weight:700;font-size:13px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">Climate Resilience</td></tr>
         <tr><td>CRI Score</td><td><span style="color:${criColor(d._cri)};font-weight:800">${fmtDec(d._cri, 3)}</span></td></tr>
         <tr><td>Avg Income</td><td>R$ ${isNaN(d._avg_income) ? '—' : fmtN(Math.round(d._avg_income))}</td></tr>
+        <tr><td>Population</td><td>${d._total_pop > 0 ? fmtN(d._total_pop) : '—'}</td></tr>
         <tr><td>Literacy</td><td>${fmtPct(d._pct_lit)}</td></tr>
         <tr><td>Piped Water</td><td>${fmtPct(d._pct_pip)}</td></tr>
         <tr><td>Sewage</td><td>${fmtPct(d._pct_sew)}</td></tr>
