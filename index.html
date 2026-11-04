@@ -264,17 +264,16 @@
     }
     .btn-reset:hover { background: #333333; }
 
-    /* ── Main row (map + charts column) ──────────────────────────────────── */
+    /* ── Map and location charts ─────────────────────────────────────────── */
     .main-row {
       display: grid;
-      grid-template-columns: 1fr 380px;
+      grid-template-columns: 1fr;
       gap: var(--gap);
       margin-bottom: var(--gap);
-      align-items: stretch;
     }
     .charts-col {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: var(--gap);
     }
 
@@ -415,18 +414,12 @@
     .pg-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
     /* ── Responsive ───────────────────────────────────────────────────────── */
-    @media (max-width: 1200px) {
-      .main-row { grid-template-columns: 1fr 320px; }
-    }
     @media (max-width: 1000px) {
-      .main-row { grid-template-columns: 1fr; }
       .charts-row { grid-template-columns: 1fr; }
-      .charts-col { flex-direction: row; flex-wrap: wrap; }
-      .charts-col .panel-card { flex: 1; min-width: 260px; }
       .kpi-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 700px) {
-      .charts-col { flex-direction: column; }
+      .charts-col { grid-template-columns: 1fr; }
       .search-box { width: 100%; }
     }
 
@@ -488,7 +481,7 @@
 <!-- Main content -->
 <div class="container" id="main-content" style="display:none">
 
- //////// DESCRIPTION - MISSING SUPPLEMENTARY FILE
+ DESCRIPTION
   <!-- Description -->
   <div class="desc-card">
     <p>
@@ -513,8 +506,10 @@
 
     </p>
       <p style="font-size:12px;color:var(--muted);margin-top:8px;">
-      <strong>Citation:</strong> Salvador, C. C., Wang, Y., Augusto de Paula da Silva, A., Favarão Leão, A. L., Franco Silva, M., &amp; Reis, R. (2026). Geocoded Dataset of Brazil’s Academia da Saúde Program (PAS) [Dataset]. Harvard Dataverse. <a href="https://doi.org/10.7910/DVN/B3HNWS" target="_blank" rel="noopener">https://doi.org/10.7910/DVN/B3HNWS</a>
-      <strong>Reference:</strong> Instituto Brasileiro de Geografia e Estatística. Coordenação de Geografia. (2020). Regiões de influência das cidades: 2018. IBGE <a href="https://www.ibge.gov.br/geociencias/cartas-e-mapas/redes-geograficas/15798-regioes-de-influencia-das-cidades.html" target="_blank" rel="noopener">https://www.ibge.gov.br/geociencias/cartas-e-mapas/redes-geograficas/15798-regioes-de-influencia-das-cidades.html</a>
+      <strong>Citation:</strong> Salvador, Catharina; Reis, Rodrigo; Silva, Alexandre; Franco Silva, Milena; Wang, Yi; VanDeVoorde, Nora; et al. (2026) Academia da Saude (PAS) Dataset <a href= "https://doi.org/10.5281/zenodo.23810776"target="_blank" rel="noopener">https://doi.org/10.5281/zenodo.23810776</a>
+      
+      <strong>Supplementary material:</strong>  Reis, Rodrigo; Salvador, Catharina; Silva, Alexandre; Franco Silva, Milena; Wang, Yi; VanDeVoorde, Nora; et al. (2026). Academia da Saude Dataset - Street view photo library, shapefiles and phyton library. figshare. Figure. <a href="https://doi.org/10.6084/m9.figshare.33372634" target="_blank" rel="noopener">https://doi.org/10.6084/m9.figshare.33372634</a>
+<strong>Reference:</strong> Instituto Brasileiro de Geografia e Estatística. Coordenação de Geografia. (2020). Regiões de influência das cidades: 2018. IBGE <a href="https://www.ibge.gov.br/geociencias/cartas-e-mapas/redes-geograficas/15798-regioes-de-influencia-das-cidades.html" target="_blank" rel="noopener">https://www.ibge.gov.br/geociencias/cartas-e-mapas/redes-geograficas/15798-regioes-de-influencia-das-cidades.html</a>
     </p>
     <p style="font-size:12px;color:var(--muted);margin-top:4px;">
       <strong>Funding:</strong> This work was supported by the <a href="https://global.washu.edu/global-partnerships/seed-grants/" target="_blank" rel="noopener">Global Incubator Seed Grants Program at Washington University in St. Louis</a>, the National Institute of Diabetes and Digestive and Kidney Diseases (P30DK092950), and the Foundation for Barnes-Jewish Hospital.
@@ -548,7 +543,7 @@
     <button class="btn-reset" onclick="resetFilters()">Reset</button>
   </div>
 
-  <!-- Map + all 3 charts -->
+  <!-- Map with location charts below -->
   <div class="main-row">
     <div class="card">
       <div class="card-header">
